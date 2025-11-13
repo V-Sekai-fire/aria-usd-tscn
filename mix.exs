@@ -23,6 +23,7 @@ defmodule AriaUsdTscn.MixProject do
   defp deps do
     [
       {:aria_usd, git: "https://github.com/V-Sekai-fire/aria-usd.git", branch: "feature/mesh-and-variant-support"},
+      {:aria_godot, git: "https://github.com/V-Sekai-fire/aria-godot.git"},
       {:jason, "~> 1.4"},
       {:pythonx, "~> 0.4.0", runtime: false}
     ]

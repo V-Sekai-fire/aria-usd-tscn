@@ -7,6 +7,7 @@ defmodule AriaUsdTscn do
   """
 
   alias AriaUsd
+  alias AriaGodot.TscnParser
   alias Pythonx
   alias Jason
 
@@ -125,15 +126,28 @@ defmodule AriaUsdTscn do
       when is_binary(tscn_path) and is_binary(output_usd_path) do
     tscn_data = Keyword.get(opts, :tscn_data)
 
-    if tscn_data do
-      # Use provided parsed TSCN data
-      case AriaUsd.ensure_pythonx() do
-        :ok -> do_tscn_to_usd_from_parsed(tscn_data, output_usd_path)
-        :mock -> mock_tscn_to_usd(tscn_path, output_usd_path)
+    # Parse TSCN file if not provided
+    parsed_data =
+      if tscn_data do
+        {:ok, tscn_data}
+      else
+        # Use AriaGodot.TscnParser to parse TSCN file
+        case TscnParser.parse_tscn(tscn_path) do
+          {:ok, data} -> {:ok, data}
+          error -> error
+        end
       end
-    else
-      # Fallback - would need TSCN parser (not included in standalone module)
-      {:error, "TSCN parsing not available in standalone module. Provide :tscn_data option."}
+
+    case parsed_data do
+      {:ok, data} ->
+        # Use provided or parsed TSCN data
+        case AriaUsd.ensure_pythonx() do
+          :ok -> do_tscn_to_usd_from_parsed(data, output_usd_path)
+          :mock -> mock_tscn_to_usd(tscn_path, output_usd_path)
+        end
+
+      {:error, reason} ->
+        {:error, "Failed to parse TSCN file: #{reason}"}
     end
   end
 
